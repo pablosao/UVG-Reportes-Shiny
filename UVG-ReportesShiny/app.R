@@ -12,16 +12,22 @@ library(shinydashboard)
 library(RPostgreSQL)
 library(DT)
 library(ECharts2Shiny)
+#install.packages("ini")
+library(ini)
 source("queryManager.R")
 
-#Coneccion a DB DUMMY
+# PSAO / 19-05-2020 / Ser cargan datos de conexion configurado en archivo .ini
+datosConexion <- read.ini('conexion.ini')
 
-db <- 'preportes'
-host_db <- 'covid-19.westus2.cloudapp.azure.com'
-db_port <- '5432'
-db_user <- 'reportes'
-db_password <- 'SDex2020'
 
+# PSAO / 19-05-2020 / Se configuran credenciales de DB a partir de archivo .ini a DB
+db <- datosConexion$db_conexion$db  
+host_db <- datosConexion$db_conexion$host 
+db_port <- datosConexion$db_conexion$port 
+db_user <- datosConexion$db_conexion$user 
+db_password <- datosConexion$db_conexion$password 
+
+# Realizando conexion a DB
 con <- dbConnect(RPostgres::Postgres(), dbname = db, host=host_db, port=db_port, user=db_user, password=db_password)
 
 # PSAO / 19-05-1010 / Se agrega llamado a funcion para obtener querys
