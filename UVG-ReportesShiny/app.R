@@ -7,9 +7,23 @@
 #
 #   Fecha: 19/05/2020
 #
-
 library(shiny)
 library(shinydashboard)
+library(RPostgreSQL)
+
+#Coneccion a DB DUMMY
+
+db <- 'preportes'
+
+host_db <- 'covid-19.westus2.cloudapp.azure.com'
+
+db_port <- '5432'
+
+db_user <- 'reportes'
+
+db_password <- 'SDex2020'
+
+con <- dbConnect(RPostgres::Postgres(), dbname = db, host=host_db, port=db_port, user=db_user, password=db_password)
 
 
 ui <- dashboardPage(
