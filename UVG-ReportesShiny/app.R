@@ -34,7 +34,6 @@ casosPorMunicipio <- dbGetQuery(con, getCasos_MunicipioDummy())
 cantDeSintomas <- dbGetQuery(con, getCantidad_SintomasDummy())
 sexoVsCasos <- dbGetQuery(con,getCasos_SexoDummy() )
 
-
 ui <- dashboardPage(
     title = "Reportes COVID-19",
     dashboardHeader(title= "Reportes COVID-19 UVG"),
@@ -78,7 +77,8 @@ ui <- dashboardPage(
                         box(
                             plotOutput('cantSinto'), 
                             width = 10,
-                        )
+                        ),
+                        
                         
                     )
             ),
