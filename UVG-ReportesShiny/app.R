@@ -12,28 +12,27 @@ library(shinydashboard)
 library(RPostgreSQL)
 library(DT)
 library(ECharts2Shiny)
+#install.packages("ini")
+library(ini)
+source("queryManager.R")
 
-#Coneccion a DB DUMMY
+# PSAO / 19-05-2020 / Ser cargan datos de conexion configurado en archivo .ini
+datosConexion <- read.ini('conexion.ini')
 
-db <- 'preportes'
+# PSAO / 19-05-2020 / Se configuran credenciales de DB a partir de archivo .ini a DB
+db <- datosConexion$db_conexion$db  
+host_db <- datosConexion$db_conexion$host 
+db_port <- datosConexion$db_conexion$port 
+db_user <- datosConexion$db_conexion$user 
+db_password <- datosConexion$db_conexion$password 
 
-host_db <- 'covid-19.westus2.cloudapp.azure.com'
-
-db_port <- '5432'
-
-db_user <- 'reportes'
-
-db_password <- 'SDex2020'
-
+# Realizando conexion a DB
 con <- dbConnect(RPostgres::Postgres(), dbname = db, host=host_db, port=db_port, user=db_user, password=db_password)
 
-casosPorMunicipio <- dbGetQuery(con, "select b.descripcion as pais,c.descripcion as municipio,a.caso_confirmado,count(a.codigo_solicitud) as cantidad_registrados from solicitud as a inner join pais as b on a.codigo_pais = b.codigo_pais inner join municipio as c on a.codigo_municipio = c.codigo_municipio group by b.descripcion,c.descripcion,a.caso_confirmado order by c.descripcion;")
-
-cantDeSintomas <- dbGetQuery(con, "select b.descripcion ,count(a.codigo_sintoma) from sintomas_persona as a inner join tipo_sintoma as b on a.codigo_sintoma = b.codigo_sintoma group by b.descripcion;")
-
-sexoVsCasos <- dbGetQuery(con, "select case sexo when 'F' then 'Femenino' when 'M' then 'Masculino' end as name,count(codigo_solicitud) as value from solicitud group by sexo,caso_confirmado order by sexo;")
-
-print(sexoVsCasos)
+# PSAO / 19-05-1010 / Se agrega llamado a funcion para obtener querys
+casosPorMunicipio <- dbGetQuery(con, getCasos_MunicipioDummy())
+cantDeSintomas <- dbGetQuery(con, getCantidad_SintomasDummy())
+sexoVsCasos <- dbGetQuery(con,getCasos_SexoDummy() )
 
 ui <- dashboardPage(
     title = "Reportes COVID-19",
@@ -79,11 +78,11 @@ ui <- dashboardPage(
                             plotOutput('cantSinto'), 
                             width = 15,
                         ),
-                        h3("Sexo vs Casos"),
+                        h3("Cantidad de por Sexo"),
                         box(
                             plotOutput('sexvscases'), 
                             width = 15,
-                        )
+                        ),
                         
                     )
             ),
