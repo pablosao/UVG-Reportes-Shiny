@@ -115,10 +115,10 @@ server <- function(input, output){
         casosPorMunicipio
     })
     output$cantSinto <- renderPlot({
-        barplot(table(cantDeSintomas$count), names.arg = c("Fallo Renal", "Neumonia", "Vomitos", "Dificultad Respiratoria", "Dolor de Garganta", "Fiebre"), ylab = "Cantidad de personas", main = "Cantidad de personas por sintoma", col = "lightblue")
+        barplot(table(cantDeSintomas$cantidad), names.arg = c("Fallo Renal", "Neumonia", "Vomitos", "Dificultad Respiratoria", "Dolor de Garganta", "Fiebre"), ylab = "Cantidad de personas", main = "Cantidad de personas por sintoma", col = "lightblue")
     })
     output$sexvscases <- renderPlot({
-        pie(sexoVsCasos$value, labels = c("Femenino", "Femenino Confirmado", "Masculino", "Masculino Convirmado"), main = "Sexo Vs Casos")
+        pie(sexoVsCasos$cantidad, labels = c("Femenino", "Femenino Confirmado", "Masculino", "Masculino Convirmado"), main = "Sexo Vs Casos")
     })
 }
 
