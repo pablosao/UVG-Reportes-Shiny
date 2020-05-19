@@ -19,7 +19,6 @@ source("queryManager.R")
 # PSAO / 19-05-2020 / Ser cargan datos de conexion configurado en archivo .ini
 datosConexion <- read.ini('conexion.ini')
 
-
 # PSAO / 19-05-2020 / Se configuran credenciales de DB a partir de archivo .ini a DB
 db <- datosConexion$db_conexion$db  
 host_db <- datosConexion$db_conexion$host 
