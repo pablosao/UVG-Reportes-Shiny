@@ -1,49 +1,69 @@
 #
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
+#           UVG-Reportes-COVID-19
 #
-# Find out more about building applications with Shiny here:
+#   Creado por: Juan Fernando De Leon Quezada
 #
-#    http://shiny.rstudio.com/
+#   Descripcion: Shiny Dashboard
+#
+#   Fecha: 19/05/2020
 #
 
 library(shiny)
+library(shinydashboard)
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
+ui <- dashboardPage(
+    dashboardHeader(title= "Reportes COVID-19 UVG"),
+    dashboardSidebar(
+        sidebarMenu(
+            menuItem("General", tabName = "general", icon = icon("chart-pie")),
+            menuItem("Casos", tabName = "cases", icon = icon("caret-right")),
+            menuItem("Afectados", tabName = "afected", icon = icon("caret-right")),
+            menuItem("Regiones", tabName = "regions", icon = icon("caret-right")),
+            menuItem("Sintomas Comunes", tabName = "symptoms", icon = icon("caret-right"))
+        )
+    ),
+    dashboardBody(
+        tabItems(
+            tabItem("general",
+                    fluidPage(
+                        h1("General"),
+                        br(),
+                        box(plotOutput("correlation_plot"), width = 8),
+                        box(selectInput("features", "Features:",
+                                        c("Sepal.Width", "Petal.Length", "Petal.Width")),
+                            width = 4
+                        )
+                    )
+            ),
+            tabItem("cases",
+                    fluidPage(
+                        h1("Casos")
+                    )
+            ),
+            tabItem("afected",
+                    fluidPage(
+                        h1("Afectados")
+                    )
+            ),
+            tabItem("regions",
+                    fluidPage(
+                        h1("Regiones")
+                    )
+            ),
+            tabItem("symptoms",
+                    fluidPage(
+                        h1("Sintomas Comunes")
+                    )
+            )
         )
     )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+server <- function(input, output){
+    output$correlation_plot <- renderPlot({
+        plot(iris$Sepal.Length, iris[[input$features]], xlab = "Sepal length", ylab = "Features")
     })
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
