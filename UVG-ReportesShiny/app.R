@@ -31,7 +31,9 @@ casosPorMunicipio <- dbGetQuery(con, "select b.descripcion as pais,c.descripcion
 
 cantDeSintomas <- dbGetQuery(con, "select b.descripcion ,count(a.codigo_sintoma) from sintomas_persona as a inner join tipo_sintoma as b on a.codigo_sintoma = b.codigo_sintoma group by b.descripcion;")
 
-sexoVsCasos <- dbGetQuery(con, "select case sexo when 'F' then 'Femenino' when 'M' then 'Masculino' end as sexo,caso_confirmado,count(codigo_solicitud) from solicitud group by sexo,caso_confirmado order by sexo;")
+sexoVsCasos <- dbGetQuery(con, "select case sexo when 'F' then 'Femenino' when 'M' then 'Masculino' end as name,count(codigo_solicitud) as value from solicitud group by sexo,caso_confirmado order by sexo;")
+
+print(sexoVsCasos)
 
 ui <- dashboardPage(
     title = "Reportes COVID-19",
@@ -75,7 +77,12 @@ ui <- dashboardPage(
                         h3("Cantidad de Sintomas"),
                         box(
                             plotOutput('cantSinto'), 
-                            width = 10,
+                            width = 15,
+                        ),
+                        h3("Sexo vs Casos"),
+                        box(
+                            plotOutput('sexvscases'), 
+                            width = 15,
                         )
                         
                     )
@@ -109,14 +116,10 @@ server <- function(input, output){
         casosPorMunicipio
     })
     output$cantSinto <- renderPlot({
-        barplot(
-                height = as.matrix.data.frame(cantDeSintomas),
-                main = "Maximum Temperatures in a Week",
-                xlab = "Cantidad de personas",
-                ylab = "Sintomas",
-                names.arg = c(cantDeSintomas[['descripcion']]),
-                col = "darkred",
-                horiz = TRUE)
+        barplot(table(cantDeSintomas$count), names.arg = c("Fallo Renal", "Neumonia", "Vomitos", "Dificultad Respiratoria", "Dolor de Garganta", "Fiebre"), ylab = "Cantidad de personas", main = "Cantidad de personas por sintoma", col = "lightblue")
+    })
+    output$sexvscases <- renderPlot({
+        pie(sexoVsCasos$value, labels = c("Femenino", "Femenino Confirmado", "Masculino", "Masculino Convirmado"), main = "Sexo Vs Casos")
     })
 }
 
