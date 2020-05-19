@@ -55,3 +55,4 @@ getSexo_EstadoPrueba<-function(fecha_inicial,fecha_final){
 
   return(query)
 }
+
