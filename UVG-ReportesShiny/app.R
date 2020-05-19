@@ -110,7 +110,13 @@ server <- function(input, output){
     })
     output$cantSinto <- renderPlot({
         barplot(
-        )
+                height = as.matrix.data.frame(cantDeSintomas),
+                main = "Maximum Temperatures in a Week",
+                xlab = "Cantidad de personas",
+                ylab = "Sintomas",
+                names.arg = c(cantDeSintomas[['descripcion']]),
+                col = "darkred",
+                horiz = TRUE)
     })
 }
 
