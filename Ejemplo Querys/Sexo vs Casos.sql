@@ -1,4 +1,21 @@
-SELECT
+-- Usar este
+
+
+select
+	 case sexo
+		when 'F' then 'Femenino'
+		when 'M' then 'Masculino'
+	 end as sexo
+ 	,caso_confirmado
+	,count(codigo_solicitud)
+from 
+	solicitud
+group by sexo,caso_confirmado
+order by sexo;
+
+
+-- Usar el de arriba
+/*SELECT
 	 sexo
 	,CASE WHEN positivo IS NULL
 		THEN 0
@@ -36,3 +53,4 @@ FROM
 					,Positivo  bigint
 					,Negativo bigint
 					);
+*/
