@@ -33,9 +33,8 @@ cantDeSintomas <- dbGetQuery(con, "select b.descripcion ,count(a.codigo_sintoma)
 
 sexoVsCasos <- dbGetQuery(con, "select case sexo when 'F' then 'Femenino' when 'M' then 'Masculino' end as sexo,caso_confirmado,count(codigo_solicitud) from solicitud group by sexo,caso_confirmado order by sexo;")
 
-print(cantDeSintomas)
-
 ui <- dashboardPage(
+    title = "Reportes COVID-19",
     dashboardHeader(title= "Reportes COVID-19 UVG"),
     dashboardSidebar(
         sidebarMenu(
@@ -47,15 +46,38 @@ ui <- dashboardPage(
         )
     ),
     dashboardBody(
+        tags$head(
+            tags$style(HTML('
+              .skin-blue .main-header .navbar{
+                background-color: #21822b;
+              }
+              .skin-blue .main-header .logo{
+                background-color: #21822b;
+              }
+              .skin-blue .sidebar-menu > li.active > a, .skin-blue .sidebar-menu > li:hover > a{
+                border-left-color: #21822b;
+              }
+              .skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
+                background-color: #3b3a3b;
+              }
+        '))
+        ),
         tabItems(
             tabItem("general",
                     fluidPage(
                         h1("General"),
                         hr(),
                         h3("Casos por Municipio"),
-                        DT::dataTableOutput("cpm"),
+                        box(
+                            DT::dataTableOutput("cpm"),
+                            width = 15
+                        ),
                         h3("Cantidad de Sintomas"),
-                        tags$div(id="test", style="width:50%;height:400px;"),
+                        box(
+                            plotOutput('cantSinto'), 
+                            width = 10,
+                        )
+                        
                     )
             ),
             tabItem("cases",
@@ -86,7 +108,10 @@ server <- function(input, output){
     output$cpm = DT::renderDataTable({
         casosPorMunicipio
     })
-    renderBarChart(div_id = "test", grid_left = '1%', direction = "horizontal", data = cantDeSintomas)
+    output$cantSinto <- renderPlot({
+        barplot(
+        )
+    })
 }
 
 shinyApp(ui, server)
