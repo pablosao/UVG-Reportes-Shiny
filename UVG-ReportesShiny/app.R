@@ -15,6 +15,7 @@ library(ECharts2Shiny)
 #install.packages("ini")
 library(ini)
 source("queryManager.R")
+library(plotly)
 
 # PSAO / 19-05-2020 / Ser cargan datos de conexion configurado en archivo .ini
 datosConexion <- read.ini('conexion.ini')
@@ -73,16 +74,18 @@ ui <- dashboardPage(
                             DT::dataTableOutput("cpm"),
                             width = 15
                         ),
-                        h3("Cantidad de Sintomas"),
+                        h3("Síntomas Reportados"),
                         box(
-                            plotOutput('cantSinto'), 
-                            width = 15,
+                            # PSAO / 19-05-2020 / se cambia por grafica de plotly
+                            plotlyOutput("Gsintomas_reportados", height = "600px"),
+                            width = 15
                         ),
                         h3("Cantidad de por Sexo"),
                         box(
                             plotOutput('sexvscases'), 
                             width = 15,
-                        ),
+                        )
+                        
                         
                     )
             ),
@@ -114,12 +117,30 @@ server <- function(input, output){
     output$cpm = DT::renderDataTable({
         casosPorMunicipio
     })
-    output$cantSinto <- renderPlot({
-        barplot(table(cantDeSintomas$cantidad), names.arg = c("Fallo Renal", "Neumonia", "Vomitos", "Dificultad Respiratoria", "Dolor de Garganta", "Fiebre"), ylab = "Cantidad de personas", main = "Cantidad de personas por sintoma", col = "lightblue")
+    
+    # PSAO / 19-05-2020 / se agrega libreria de plotly para graficas
+    output$Gsintomas_reportados <- renderPlotly({
+        
+        Gsintomas_reportados <- plot_ly(
+            cantDeSintomas, x = ~descripcion, y = ~cantidad,type = "bar",
+            marker = list(
+                color = 'rgb(30,144,255)'
+            ) 
+        )
+            
+            # Seteamos el layout de la grafica
+            Gsintomas_reportados <- Gsintomas_reportados %>% layout(title = "",
+                              xaxis = list(title = "Síntomas"),
+                              yaxis = list(title = "Cantidad de Personas que Reportaron"))
     })
+    
+    
+    
     output$sexvscases <- renderPlot({
         pie(sexoVsCasos$cantidad, labels = c("Femenino", "Femenino Confirmado", "Masculino", "Masculino Convirmado"), main = "Sexo Vs Casos")
     })
+    
+    
 }
 
 shinyApp(ui, server)
