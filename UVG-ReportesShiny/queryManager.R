@@ -94,7 +94,7 @@ getCasos_SexoDummy<-function(){
                  when 'M' then 'Masculino' 
                end as sexo
               ,caso_confirmado
-              ,count(codigo_solicitud) 
+              ,count(codigo_solicitud) as cantidad
             from 
               solicitud 
             group by sexo,caso_confirmado 
