@@ -4,6 +4,41 @@
 # Created by: Pablo Sao
 # Created on: 12/05/2020
 
+getDatos_Cartograma<-function(fecha_inicial,fecha_final){
+  # Descripcion:= retorna el query con la fecha en el filtro para obtener los datos del
+  #               cartograma y las solicitudes realizadas por municipio
+  # fecha_inicial:= type Date
+  # fecha_final:= type Date
+  # Ejemplo:= getSolicitus_sexo('2020-04-01','2020-05-31')
+  
+  query <- sprintf("SELECT
+                        pais
+                        ,departamento
+                        ,municipio
+                        ,cantidad_solicitudes
+                    FROM
+                        public.stp_s_cartograma('%s'::date,'%s'::date);",
+                   fecha_inicial,fecha_final)
+  
+  return(query)
+}
+
+getSolicitus_sexo<-function(fecha_inicial,fecha_final){
+  # Descripcion:= retorna el query con la fecha en el filtro para retornar la cantidad
+  #               de personas registradas por sexo
+  # fecha_inicial:= type Date
+  # fecha_final:= type Date
+  # Ejemplo:= getSolicitus_sexo('2020-04-01','2020-05-31')
+  
+  query <- sprintf("SELECT
+                       sexo
+                      ,cantidad_solicitudes
+                    FROM
+                    public.stp_S_solicitud_sexo('%s'::date,'%s'::date);",
+                   fecha_inicial,fecha_final)
+  
+  return(query)
+}
 
 getCantidad_Sintomas<-function(fecha_inicial,fecha_final){
   # Descripcion:= retorna el query con la fecha en el filtro para retornar la cantidad
