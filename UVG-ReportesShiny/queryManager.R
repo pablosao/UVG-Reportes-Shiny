@@ -5,69 +5,27 @@
 # Created on: 12/05/2020
 
 
-getSexo_EstadoPrueba<-function(fecha_inicial,fecha_final){
+getCantidad_Sintomas<-function(fecha_inicial,fecha_final){
   # Descripcion:= retorna el query con la fecha en el filtro para retornar la cantidad
-  #               de los resultados de los casos vs sexo
+  #               de sintomas reportados
   # fecha_inicial:= type Date
   # fecha_final:= type Date
-  # Ejemplo:= getSexo_EstadoPrueba('2020-04-01 00:00:00.00','2020-05-31 00:00:00.00')
-
-  query <- sprintf("
-            SELECT
-                sexo
-                ,CASE WHEN positivo IS NULL
-                    THEN 0
-                    ELSE positivo
-                END AS Positivo
-                ,CASE WHEN negativo IS NULL
-                    THEN 0
-                    ELSE negativo
-                END AS Negativo
-            FROM
-                crosstab(
-                        $$SELECT
-                             CASE sexo
-                                WHEN 'F' THEN 'Femenino'
-                                WHEN 'M' THEN 'Masculino'
-                             END AS sexo
-                            ,CASE caso_confirmado
-                                WHEN true THEN 'Positivo'
-                                WHEN false THEN 'Negativo'
-                             END AS caso_confirmado
-                            ,COUNT(codigo_solicitud) AS cantidad
-                        FROM
-                            solicitud
-                        WHERE
-                            fecha_solicitud BETWEEN '%s'::date AND '%s'::date
-                        GROUP BY sexo,caso_confirmado
-                        ORDER BY sexo
-                        $$,
-                        $$SELECT 'Positivo' AS descripcion
-                        UNION ALL
-                        SELECT 'Negativo' AS descripcion
-                        $$
-                        )
-                AS final_result( Sexo TEXT
-                                ,Positivo  bigint
-                                ,Negativo bigint
-                                );
-        ",fecha_inicial,fecha_final)
-
-  return(query)
-}
-
-getCantidad_SintomasDummy<-function(){
+  # Ejemplo:= getCantidad_Sintomas('2020-04-01','2020-05-31')
   
-  query <- "select 
-               b.descripcion 
-              ,count(a.codigo_sintoma) as cantidad
-            from 
-              sintomas_persona as a 
-            inner join tipo_sintoma as b on a.codigo_sintoma = b.codigo_sintoma 
-            group by b.descripcion;"
+  query <- sprintf("select               
+                    	b.descripcion              
+                    	,count(a.codigo_sintoma) as cantidad
+                    from
+                    	sintomas_persona as a
+                    inner join tipo_sintoma as b on a.codigo_sintoma = b.codigo_sintoma
+                    inner join solicitud as c on a.codigo_solicitud = c.codigo_solicitud
+                    WHERE
+                    c.fecha_solicitud BETWEEN '%s'::date AND '%s'::date
+                    group by b.descripcion;",fecha_inicial,fecha_final)
   
   return(query)
 }
+
 
 getCasos_MunicipioDummy<-function(){
   
