@@ -4,6 +4,23 @@
 # Created by: Pablo Sao
 # Created on: 12/05/2020
 
+getSintomas_reportados<-function(fecha_inicial,fecha_final){
+  # Descripcion:= retorna el query con la fecha en el filtro para obtener los sintomas
+  #               que han reportado los usuarios
+  # fecha_inicial:= type Date
+  # fecha_final:= type Date
+  # Ejemplo:= getSintomas_reportados('2020-04-01','2020-05-31')
+  
+  query <- sprintf("SELECT 
+                       sintoma 
+                      ,cantidad_reportada
+                  FROM
+                  public.stp_s_sintomas_reportados('%s'::date,'%s'::date);",
+                  fecha_inicial,fecha_final)
+  
+  return(query)
+}
+
 getDatos_Cartograma<-function(fecha_inicial,fecha_final){
   # Descripcion:= retorna el query con la fecha en el filtro para obtener los datos del
   #               cartograma y las solicitudes realizadas por municipio

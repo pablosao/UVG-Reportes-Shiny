@@ -26,31 +26,33 @@ library(viridis)
 library(rworldmap)
 library(maps)
 library(ggmap)
-read.csv("~/covid27.csv") -> data
-data$Province.State <- lapply(data$Province.State, as.character)
 
-str(data$Province.State)
 
-data$Country.Region<- lapply(data$Country.Region, as.character)
-
-key = "AIzaSyB8hwaB2EEOsucgdc80NCaGp7p7XiSPBvQ" #please use your own API key, I have input the key previously.
-register_google(key=key)
-
-#obtain the coordinates
-country <- data$Country.Region
-cities <- data$Province.State
-#use lapply to iterate and obtain the coordinates information.
-loc1 <- do.call(rbind, lapply(cities, function(x) geocode(x))) 
-loc1 <- as.data.frame(loc1)
-loc2 <- do.call(rbind, lapply(country, function(x) geocode(x))) 
-loc2 <- as.data.frame(loc2)
-
-#create them as data.frame
-as.data.frame(data[,1:2]) -> data2
-data2$lon <- ifelse(data2[,1]== "", loc2[,1], loc1[,1])
-data2$lat <- ifelse(data2[,1]== "", loc2[,2], loc1[,2])
-data2 <- data.frame(data2, Confirmed=data$Confirmed, Deaths=data$Deaths, Recovered= data$Recovered)
-
+# read.csv("~/covid27.csv") -> data
+# data$Province.State <- lapply(data$Province.State, as.character)
+# 
+# str(data$Province.State)
+# 
+# data$Country.Region<- lapply(data$Country.Region, as.character)
+# 
+# key = "AIzaSyB8hwaB2EEOsucgdc80NCaGp7p7XiSPBvQ" #please use your own API key, I have input the key previously.
+# register_google(key=key)
+# 
+# #obtain the coordinates
+# country <- data$Country.Region
+# cities <- data$Province.State
+# #use lapply to iterate and obtain the coordinates information.
+# loc1 <- do.call(rbind, lapply(cities, function(x) geocode(x))) 
+# loc1 <- as.data.frame(loc1)
+# loc2 <- do.call(rbind, lapply(country, function(x) geocode(x))) 
+# loc2 <- as.data.frame(loc2)
+# 
+# #create them as data.frame
+# as.data.frame(data[,1:2]) -> data2
+# data2$lon <- ifelse(data2[,1]== "", loc2[,1], loc1[,1])
+# data2$lat <- ifelse(data2[,1]== "", loc2[,2], loc1[,2])
+# data2 <- data.frame(data2, Confirmed=data$Confirmed, Deaths=data$Deaths, Recovered= data$Recovered)
+# 
 
 
 
@@ -69,9 +71,9 @@ db_password <- datosConexion$db_conexion$password
 con <- dbConnect(RPostgres::Postgres(), dbname = db, host=host_db, port=db_port, user=db_user, password=db_password)
 
 # PSAO / 19-05-1010 / Se agrega llamado a funcion para obtener querys
-casosPorMunicipio <- dbGetQuery(con, getCasos_MunicipioDummy())
+#casosPorMunicipio <- dbGetQuery(con, getCasos_MunicipioDummy())
 #cantDeSintomas <- dbGetQuery(con, getCantidad_SintomasDummy())
-sexoVsCasos <- dbGetQuery(con,getCasos_SexoDummy() )
+#sexoVsCasos <- dbGetQuery(con,getCasos_SexoDummy() )
 
 ui <- dashboardPage(
     title = "Reportes COVID-19",
@@ -120,11 +122,12 @@ ui <- dashboardPage(
                         fluidRow(
                             column(6,
                                    # PSAO / 19-05-2020 / se cambia por grafica de plotly
-                                   plotlyOutput("Gsintomas_reportados", height = "600px")
+                                   plotlyOutput("Gsintomas_reportados", height = "400px")
                             ),
                             
                             column(6,
-                                   plotOutput('sexvscases')
+                                   # PSAO / 02-06-2020 / Se agrega grafica de usuarios registrados
+                                   plotlyOutput("Gregistro_sexo", height = "400px")
                             )
                         ),
                         
@@ -132,18 +135,7 @@ ui <- dashboardPage(
                         box(
                             DT::dataTableOutput("cpm"),
                             width = 15
-                        ),
-                        #h3("Síntomas Reportados"),
-                        #box(
-                            # PSAO / 19-05-2020 / se cambia por grafica de plotly
-                        #    plotlyOutput("Gsintomas_reportados", height = "600px"),
-                        #    width = 15
-                        #),
-                        #h3("Cantidad de por Sexo"),
-                        #box(
-                        #    plotOutput('sexvscases'), 
-                        #    width = 15,
-                        #)
+                        )
                         
                         
                     )
@@ -175,83 +167,103 @@ ui <- dashboardPage(
 
 server <- function(input, output){
     output$cpm = DT::renderDataTable({
-        casosPorMunicipio
+        casosPorMunicipio <- dbGetQuery(con, getDatos_Cartograma(input$RangoFechas[1],input$RangoFechas[2]))
+        
     })
     
     # PSAO / 19-05-2020 / se agrega libreria de plotly para graficas
     output$Gsintomas_reportados <- renderPlotly({
         
         # PSAO / 31-05-2020 / Agregando actualización segun rango de fechas seleccioando
-        cantDeSintomas <- dbGetQuery(con, getCantidad_Sintomas(input$RangoFechas[1],input$RangoFechas[2]))
+        cantDeSintomas <- dbGetQuery(con, getSintomas_reportados(input$RangoFechas[1],input$RangoFechas[2]))
         
         Gsintomas_reportados <- plot_ly(
-            cantDeSintomas, x = ~descripcion, y = ~cantidad,type = "bar",
+            cantDeSintomas, x = ~sintoma, y = ~cantidad_reportada,type = "bar",
             marker = list(
-                color = 'rgb(30,144,255)'
+                color = 'rgb(0,128,0)'
             ) 
         )
             
-            # Seteamos el layout de la grafica
-            Gsintomas_reportados <- Gsintomas_reportados %>% layout(title = "",
+        # Seteamos el layout de la grafica
+        Gsintomas_reportados <- Gsintomas_reportados %>% layout(title = "",
                               xaxis = list(title = "Síntomas"),
                               yaxis = list(title = "Cantidad de Personas que Reportaron"))
     })
     
     
+    # PSAO / 02-06-2020 / se agrega grafica de usuarios registrados por sexo
+    output$Gregistro_sexo <- renderPlotly({
+        
+        # PSAO / 31-05-2020 / Agregando actualización segun rango de fechas seleccioando
+        cantReg_sexo <- dbGetQuery(con, getSolicitus_sexo(input$RangoFechas[1],input$RangoFechas[2]))
+        
+        Gregistro_sexo <- plot_ly(
+            cantReg_sexo, x = ~sexo, y = ~cantidad_solicitudes,type = "bar",
+            marker = list(
+                color = 'rgb(0,128,0)'
+            ) 
+        )
+        
+        # Seteamos el layout de la grafica
+        Gregistro_sexo <- Gregistro_sexo %>% layout(title = "",
+                                        xaxis = list(title = "Sexo"),
+                                        yaxis = list(title = "Cantidad de Personas Registradas"))
+    })
     
-    output$sexvscases <- renderPlot({
-        pie(sexoVsCasos$cantidad, labels = c("Femenino", "Femenino Confirmado", "Masculino", "Masculino Convirmado"), main = "Sexo Vs Casos")
-    })
-    output$p <- renderPlotly({
-        #static map with ggplot
-        world  <- map_data("world")
-        
-        g <- data2 %>%
-            arrange(Confirmed) %>% 
-            mutate( name=factor(Country.Region, unique(Country.Region))) %>% 
-            ggplot() +
-            geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
-            geom_point( aes(x=lon, y=lat, size=Confirmed, color=Confirmed), alpha=0.4) +
-            scale_size_continuous(range=c(1,10)) +scale_color_viridis (trans="log") +
-            ggtitle("Coronavirus outbreak until
-    27 Jan 2020")  + theme(plot.title =
-                               element_text(size = 10, face =
-                                                "bold"), legend.title =
-                               element_text(size = 15), legend.text
-                           = element_text(size = 10))+
-            coord_map()
-        
-        
-        #interactive map with plotly
-        #mutate the data, so the country/cities can be viewed when you hover the region
-        
-        
-        
-        data2$New.R <- ifelse(data2[,1]== "", data2[,2], data2[,1])
-        #it will replace the city that does not mention in the table with the country information
-        
-        data2n <- data2 %>%
-            arrange(Deaths) %>%
-            mutate(Country.Region=factor(New.R, unique(New.R))) %>%
-            mutate( mytext=paste(
-                "CountryOrCity: ", New.R, "\n", 
-                "Confirmed: ", Deaths, sep=""))
-        
-        
-        #this is actually still static
-        p <- data2n %>%
-            ggplot() +
-            geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
-            geom_point(aes(x=lon, y=lat, size=Confirmed, color=Confirmed, text=mytext, alpha=0.5) ) +
-            scale_size_continuous(range=c(1,15)) +
-            scale_color_viridis(option="inferno", trans="log" ) +
-            scale_alpha_continuous(trans="log") +
-            theme_void() +
-            coord_map() +
-            theme(legend.position = "none")
-        #to make it as an interactive map    
-        p <- ggplotly(p, tooltip="text")
-    })
+    
+    
+    
+    # output$p <- renderPlotly({
+    #     #static map with ggplot
+    #     world  <- map_data("world")
+    #     
+    #     g <- data2 %>%
+    #         arrange(Confirmed) %>% 
+    #         mutate( name=factor(Country.Region, unique(Country.Region))) %>% 
+    #         ggplot() +
+    #         geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
+    #         geom_point( aes(x=lon, y=lat, size=Confirmed, color=Confirmed), alpha=0.4) +
+    #         scale_size_continuous(range=c(1,10)) +scale_color_viridis (trans="log") +
+    #         ggtitle("Coronavirus outbreak until
+    # 27 Jan 2020")  + theme(plot.title =
+    #                            element_text(size = 10, face =
+    #                                             "bold"), legend.title =
+    #                            element_text(size = 15), legend.text
+    #                        = element_text(size = 10))+
+    #         coord_map()
+    #     
+    #     
+    #     #interactive map with plotly
+    #     #mutate the data, so the country/cities can be viewed when you hover the region
+    #     
+    #     
+    #     
+    #     data2$New.R <- ifelse(data2[,1]== "", data2[,2], data2[,1])
+    #     #it will replace the city that does not mention in the table with the country information
+    #     
+    #     data2n <- data2 %>%
+    #         arrange(Deaths) %>%
+    #         mutate(Country.Region=factor(New.R, unique(New.R))) %>%
+    #         mutate( mytext=paste(
+    #             "CountryOrCity: ", New.R, "\n", 
+    #             "Confirmed: ", Deaths, sep=""))
+    #     
+    #     
+    #     #this is actually still static
+    #     p <- data2n %>%
+    #         ggplot() +
+    #         geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
+    #         geom_point(aes(x=lon, y=lat, size=Confirmed, color=Confirmed, text=mytext, alpha=0.5) ) +
+    #         scale_size_continuous(range=c(1,15)) +
+    #         scale_color_viridis(option="inferno", trans="log" ) +
+    #         scale_alpha_continuous(trans="log") +
+    #         theme_void() +
+    #         coord_map() +
+    #         theme(legend.position = "none")
+    #     #to make it as an interactive map    
+    #     p <- ggplotly(p, tooltip="text")
+    # })
+    
     
 }
 
