@@ -53,10 +53,10 @@ ui <- dashboardPage(
     dashboardSidebar(
         sidebarMenu(
             menuItem("General", tabName = "general", icon = icon("chart-pie")),
-            menuItem("Casos", tabName = "cases", icon = icon("caret-right")),
-            menuItem("Afectados", tabName = "afected", icon = icon("caret-right")),
-            menuItem("Regiones", tabName = "regions", icon = icon("caret-right")),
-            menuItem("Sintomas Comunes", tabName = "symptoms", icon = icon("caret-right"))
+            #menuItem("Casos", tabName = "cases", icon = icon("caret-right")),
+            #menuItem("Afectados", tabName = "afected", icon = icon("caret-right")),
+            #menuItem("Regiones", tabName = "regions", icon = icon("caret-right")),
+            #menuItem("Sintomas Comunes", tabName = "symptoms", icon = icon("caret-right"))
         )
     ),
     dashboardBody(
@@ -79,13 +79,13 @@ ui <- dashboardPage(
         tabItems(
             tabItem("general",
                     fluidPage(
-                        h1("General"),
-                        hr(),
+                        #h1("General"),
+                        #hr(),
                         # PSAO / 31-05-2020 / Se agrega filtro de rango de fechas
                         box(
                             dateRangeInput('RangoFechas',
                                            label = 'Rango de Fechas',
-                                           start = as.Date('2020-05-12') , end = as.Date('2020-05-13')
+                                           start = as.Date('2020-05-27') , end = as.Date('2020-05-31')
                             ),
                             width = 15
                         ),
@@ -103,6 +103,10 @@ ui <- dashboardPage(
                             )
                         ),
                         
+                        # Cartograma
+                        h1("Regiones"),
+                        plotlyOutput("p", height = "600px"),
+                        
                         h3("Casos por Municipio"),
                         box(
                             DT::dataTableOutput("cpm"),
@@ -111,28 +115,27 @@ ui <- dashboardPage(
                         
                         
                     )
-            ),
-            tabItem("cases",
-                    fluidPage(
-                        h1("Casos")
-                    )
-            ),
-            tabItem("afected",
-                    fluidPage(
-                        h1("Afectados")
-                    )
-            ),
-            tabItem("regions",
-                    fluidPage(
-                        h1("Regiones"),
-                        plotlyOutput("p", height = "600px")
-                    )
-            ),
-            tabItem("symptoms",
-                    fluidPage(
-                        h1("Sintomas Comunes")
-                    )
             )
+            # tabItem("cases",
+            #         fluidPage(
+            #             h1("Casos")
+            #         )
+            # ),
+            # tabItem("afected",
+            #         fluidPage(
+            #             h1("Afectados")
+            #         )
+            # ),
+            # tabItem("regions",
+            #         fluidPage(
+            #             
+            #         )
+            # ),
+            # tabItem("symptoms",
+            #         fluidPage(
+            #             h1("Sintomas Comunes")
+            #         )
+            # )
         )
     )
 )
@@ -211,56 +214,31 @@ server <- function(input, output){
         data2$lat <- ifelse(data2[,1]== "", loc2[,2], loc1[,2])
         data2 <- data.frame(data2, sospechosos=data$cantidad_solicitudes)
         
+        # geo styling
+        g <- list(
+            scope = 'guatemala',
+            projection = list(type = 'guatemala'),
+            showland = TRUE,
+            landcolor = toRGB("gray95"),
+            subunitcolor = toRGB("gray85"),
+            countrycolor = toRGB("gray85"),
+            countrywidth = 0.5,
+            subunitwidth = 0.5
+        )
+        
+        fig <- plot_geo(data2, lat = ~lat, lon = ~lon)
+        fig <- fig %>% add_markers(
+            text = ~paste("Cantidad Sospechosos:", sospechosos), hoverinfo = "sospechosos"
+        )
+        fig <- fig %>% colorbar(title = "Cantidad de Sospechosos")
+        fig <- fig %>% layout(
+            title = 'Sospechosos', geo = g
+        )
         
         
-        #static map with ggplot
-        world  <- map_data("world")
-
-        g <- data2 %>%
-            arrange(sospechosos) %>%
-            mutate( name=factor(pais, unique(pais))) %>%
-            ggplot() +
-            geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
-            geom_point( aes(x=lon, y=lat, size=sospechosos, color=sospechosos), alpha=0.4) +
-            scale_size_continuous(range=c(1,10)) +scale_color_viridis (trans="log") +
-            ggtitle("Coronavirus outbreak until
-    27 Jan 2020")  + theme(plot.title =
-                               element_text(size = 10, face =
-                                                "bold"), legend.title =
-                               element_text(size = 15), legend.text
-                           = element_text(size = 10))+
-            coord_map()
-
-
-        #interactive map with plotly
-        #mutate the data, so the country/cities can be viewed when you hover the region
-
-
-
-        data2$New.R <- ifelse(data2[,1]== "", data2[,2], data2[,1])
-        #it will replace the city that does not mention in the table with the country information
-
-        data2n <- data2 %>%
-            #arrange(Deaths) %>%
-            mutate(pais=factor(New.R, unique(New.R))) %>%
-            mutate( mytext=paste(
-                "CountryOrCity: ", New.R, "\n",
-                "Confirmed: ",  sep=""))
-
-
-        #this is actually still static
-        p <- data2n %>%
-            ggplot() +
-            geom_polygon(data = world, aes(x=long, y = lat, group = group), fill="grey", alpha=0.3) +
-            geom_point(aes(x=lon, y=lat, size=sospechosos, color=sospechosos, text=mytext, alpha=0.5) ) +
-            scale_size_continuous(range=c(1,15)) +
-            scale_color_viridis(option="inferno", trans="log" ) +
-            scale_alpha_continuous(trans="log") +
-            theme_void() +
-            coord_map() +
-            theme(legend.position = "none")
-        #to make it as an interactive map
-        p <- ggplotly(p, tooltip="text")
+        
+        
+        p <- ggplotly(fig, tooltip="text")
     })
 
 
