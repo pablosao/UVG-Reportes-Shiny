@@ -212,23 +212,26 @@ server <- function(input, output){
         as.data.frame(data[,1:2]) -> data2
         data2$lon <- ifelse(data2[,1]== "", loc2[,1], loc1[,1])
         data2$lat <- ifelse(data2[,1]== "", loc2[,2], loc1[,2])
-        data2 <- data.frame(data2, sospechosos=data$cantidad_solicitudes)
+        data2 <- data.frame(data2, sospechosos=data$cantidad_solicitudes,municipios=data$municipio)
+        
+        
+        
         
         # geo styling
         g <- list(
-            scope = 'guatemala',
-            projection = list(type = 'guatemala'),
+            scope = 'world',
+            projection = list(type = 'kavrayskiy-vii'),
             showland = TRUE,
-            landcolor = toRGB("gray95"),
-            subunitcolor = toRGB("gray85"),
-            countrycolor = toRGB("gray85"),
+            landcolor = toRGB("gray85"),
+            subunitcolor = 'rgb(0,128,0)',
+            countrycolor = 'rgb(0,128,0)',
             countrywidth = 0.5,
             subunitwidth = 0.5
         )
         
         fig <- plot_geo(data2, lat = ~lat, lon = ~lon)
         fig <- fig %>% add_markers(
-            text = ~paste("Cantidad Sospechosos:", sospechosos), hoverinfo = "sospechosos"
+            text = ~paste(paste("Municipios:", municipios),paste("Cantidad Sospechosos:", sospechosos), sep = "<br />"), hoverinfo = "sospechosos"
         )
         fig <- fig %>% colorbar(title = "Cantidad de Sospechosos")
         fig <- fig %>% layout(
