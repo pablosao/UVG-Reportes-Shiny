@@ -52,7 +52,7 @@ ui <- dashboardPage(
     dashboardHeader(title= "Reportes COVID-19 UVG"),
     dashboardSidebar(
         sidebarMenu(
-            menuItem("General", tabName = "general", icon = icon("chart-pie")),
+            menuItem("General", tabName = "general", icon = icon("chart-pie"))
             #menuItem("Casos", tabName = "cases", icon = icon("caret-right")),
             #menuItem("Afectados", tabName = "afected", icon = icon("caret-right")),
             #menuItem("Regiones", tabName = "regions", icon = icon("caret-right")),
@@ -105,7 +105,7 @@ ui <- dashboardPage(
                         
                         # Cartograma
                         h1("Regiones"),
-                        plotlyOutput("p", height = "600px"),
+                        plotlyOutput("p", height = "400px"),
                         
                         h3("Casos por Municipio"),
                         box(
